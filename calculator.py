@@ -8,20 +8,17 @@ def beregn_priser(finguld_pris):
         (finguld / 999.9 * promille) * faktor_arbejde * faktor_avance * 0.8
     """
 
-    # Hemmelig faktor (arbejde)
     faktor_arbejde = float(os.getenv("HEMMELIG_FAKTOR_ARBEJDE", "2.5"))
-
-    # Avance (moms)
     faktor_avance = 1.25
 
     priser = {
-        "24k": round(float(finguld_pris), 2)
+        "24kt": round(float(finguld_pris), 2)
     }
 
     promiller = {
-        "18k": 750,
-        "14k": 585,
-        "8k": 333
+        "18kt": 750,
+        "14kt": 585,
+        "8kt": 333
     }
 
     for karat, promille in promiller.items():

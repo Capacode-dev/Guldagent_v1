@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
+import os
+
 from scraper import hent_guldpris_dkk_pr_gram
 from validator import validate_price
 from calculator import beregn_priser
@@ -21,11 +23,14 @@ def run_guldagent_v1():
     # 3. Beregn karatpriser
     karat_priser = beregn_priser(pris)
 
-    # 4. Formatér tekst til mail
-    tekst = format_text(pris, karat_priser)
+    # 4. Formatér HTML-tekst til mail
+    body_html = format_text(pris, karat_priser)
 
     # 5. Send mail
-    send_mail(tekst)
+    subject = "Dagens guldpriser"
+    receiver = os.getenv("HEMMELIG_MODTAGER")
+
+    send_mail(subject, body_html, receiver)
 
     # 6. Log pris
     log_price(pris)
