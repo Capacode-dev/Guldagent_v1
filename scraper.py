@@ -1,42 +1,40 @@
 import os
+
 import requests
 from dotenv import load_dotenv
 
-# Indlæs .env filen
 load_dotenv()
 
-API_KEY = os.getenv("GOLD_API_KEY")
 
-def hent_guldpris_dkk_pr_gram():
-    """
-    Sikker scraper til Guldagent.
-    Henter guldpris i DKK pr gram fra GoldAPI.
-    API-nøglen hentes fra .env og ligger ikke i koden.
-    """
-
-    if not API_KEY:
-        print("FEJL: GOLD_API_KEY mangler i .env")
+def hent_guldpris_dkk_pr_gram(api_key=None):
+    """Hent guldprisen i DKK pr. gram fra GoldAPI."""
+    api_key = api_key or os.getenv("GOLD_API_KEY")
+    if not api_key:
+        print("GOLD_API_KEY mangler i miljøvariablerne.")
         return None
 
     url = "https://www.goldapi.io/api/XAU/DKK"
     headers = {
-        "x-access-token": API_KEY,
-        "Content-Type": "application/json"
+        "x-access-token": api_key,
+        "Content-Type": "application/json",
     }
 
     try:
-        r = requests.get(url, headers=headers, timeout=10)
-        data = r.json()
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
         if "price" not in data:
             print("API returnerede ingen guldpris.")
             return None
 
-        pris_dkk_pr_ounce = data["price"]
+        pris_dkk_pr_ounce = float(data["price"])
         pris_dkk_pr_gram = pris_dkk_pr_ounce / 31.1035
-
         return round(pris_dkk_pr_gram, 2)
 
-    except Exception as e:
-        print("SCRAPER FEJL:", e)
+    except requests.RequestException as error:
+        print(f"Netværksfejl ved hentning af guldpris: {error}")
+        return None
+    except (ValueError, TypeError, KeyError) as error:
+        print(f"Ugyldigt API-svar: {error}")
         return None

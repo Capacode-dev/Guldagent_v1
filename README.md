@@ -1,5 +1,4 @@
 # Guldagent v1
-# Guldagent v1
 
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -15,7 +14,7 @@ Automatiseret agent der henter guldpris, beregner karatpriser og sender dem som 
 
 ## 1. Klon projektet
 
-git clone <repo-url>
+git clone https://github.com/Capacode-dev/Guldagent_v1.git
 cd Guldagent_v1
 
 ---
@@ -40,8 +39,9 @@ pip install -r requirements.txt
 
 ## 4. Opret .env fil
 
-SMTP_USER=<bridge-email>
-SMTP_PASS=<bridge-password>
+GOLD_API_KEY=<goldapi-nøgle>
+BRIDGE_USERNAME=<bridge-email>
+BRIDGE_PASSWORD=<bridge-password>
 HEMMELIG_MODTAGER=<modtager-mail>
 HEMMELIG_FAKTOR_ARBEJDE=2.5
 
@@ -58,6 +58,18 @@ Agenten gør:
 - laver HTML-layout
 - sender mail
 - logger pris
+
+Test hele beregningen uden live API og uden at sende mail:
+
+```bash
+python agent_v1.py --dry-run --test-pris 750
+```
+
+Kontrollér at miljøvariablerne findes uden at vise deres indhold:
+
+```bash
+python check_env.py
+```
 
 ---
 

@@ -13,6 +13,9 @@ SMTP_USER = os.getenv("BRIDGE_USERNAME")
 SMTP_PASS = os.getenv("BRIDGE_PASSWORD")
 
 def send_mail(subject, body_html, receiver):
+    if not all((SMTP_USER, SMTP_PASS, receiver)):
+        raise ValueError("Mailkonfigurationen mangler BRIDGE_USERNAME, BRIDGE_PASSWORD eller modtager.")
+
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = SMTP_USER

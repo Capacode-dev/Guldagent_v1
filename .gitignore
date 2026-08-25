@@ -1,9 +1,9 @@
-.env
-
 # Virtual environments
 venv/
+venv312/
 ENV/
 env/
+.env
 
 # Python cache
 __pycache__/
@@ -15,4 +15,3 @@ guld_log.csv
 
 # OS junk
 .DS_Store
-
