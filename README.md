@@ -94,12 +94,33 @@ Kør den foreløbige demo:
 python -m guldagent_v2.demo
 ```
 
+### Byg makrodatasættet
+
+Opret en gratis FRED API-nøgle, og sæt `FRED_API_KEY` i din lokale `.env`.
+Byg derefter datasættet med:
+
+```bash
+python -m guldagent_v2.build_dataset --start 2020-01-01
+```
+
+Kommandoen gemmer fem rå serier i `data/raw/` og det samlede datasæt i
+`data/processed/macro_mvp.csv`:
+
+- amerikansk 10-årig realrente (`DFII10`)
+- bredt dollarindeks (`DTWEXBGS`)
+- 10-årig inflationsforventning (`T10YIE`)
+- VIX (`VIXCLS`)
+- amerikansk 2-årig rente (`DGS2`) som foreløbig Fed-proxy
+
+De genererede CSV-filer ignoreres af Git, så repoet ikke vokser for hver
+daglig opdatering.
+
 Kør alle tests:
 
 ```bash
 python -m unittest -v
 ```
 
-Næste trin er at hente historiske observationer og automatisk omregne rådata
-til de normaliserede signaler. LLM-laget tilføjes først, når talmodellen kan
+Næste trin er at omregne de historiske rådata automatisk til normaliserede
+signaler. LLM-laget tilføjes først, når talmodellen kan
 forklare og teste sin egen score.
