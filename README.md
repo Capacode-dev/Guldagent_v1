@@ -78,3 +78,28 @@ python check_env.py
 git add .
 git commit -m "Tilføjet README og HTML-layout"
 git push
+
+---
+
+## Guldagent v2 – første signalmodel
+
+V2 kombinerer 20 makro- og markedsvariable til en forklarlig retning:
+`OP`, `NEUTRAL` eller `NED`. Hver variabel leverer senere et normaliseret
+signal mellem `-1` og `1`. Modellen viser både samlet score, datadækning og
+de vigtigste positive og negative drivere.
+
+Kør den foreløbige demo:
+
+```bash
+python -m guldagent_v2.demo
+```
+
+Kør alle tests:
+
+```bash
+python -m unittest -v
+```
+
+Næste trin er at hente historiske observationer og automatisk omregne rådata
+til de normaliserede signaler. LLM-laget tilføjes først, når talmodellen kan
+forklare og teste sin egen score.
