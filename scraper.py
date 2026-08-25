@@ -1,12 +1,22 @@
+import os
 import requests
+from dotenv import load_dotenv
 
-API_KEY = "goldapi-96b34b737fd3c9d9c180ad12a06be94a-io"
+# Indlæs .env filen
+load_dotenv()
+
+API_KEY = os.getenv("GOLD_API_KEY")
 
 def hent_guldpris_dkk_pr_gram():
     """
-    Simpel scraper til Guldagent v1.
-    Henter kun guldpris i DKK pr gram fra GoldAPI.
+    Sikker scraper til Guldagent.
+    Henter guldpris i DKK pr gram fra GoldAPI.
+    API-nøglen hentes fra .env og ligger ikke i koden.
     """
+
+    if not API_KEY:
+        print("FEJL: GOLD_API_KEY mangler i .env")
+        return None
 
     url = "https://www.goldapi.io/api/XAU/DKK"
     headers = {
@@ -28,5 +38,5 @@ def hent_guldpris_dkk_pr_gram():
         return round(pris_dkk_pr_gram, 2)
 
     except Exception as e:
-        print(f"Fejl ved hentning af guldpris: {e}")
+        print("SCRAPER FEJL:", e)
         return None

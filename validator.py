@@ -17,3 +17,4 @@ def validate_price(pris):
         return False
 
     return True
+
