@@ -115,12 +115,28 @@ Kommandoen gemmer fem rå serier i `data/raw/` og det samlede datasæt i
 De genererede CSV-filer ignoreres af Git, så repoet ikke vokser for hver
 daglig opdatering.
 
+Normalisér rådata til sammenlignelige signaler mellem `-1` og `1`:
+
+```bash
+python -m guldagent_v2.build_signals
+```
+
+Beregn retningen fra den seneste række med signaler:
+
+```bash
+python -m guldagent_v2.analyze_latest
+```
+
+Normaliseringen bruger en 20-observations ændring og seriens bagudskuende
+60-observations volatilitet. Den bruger aldrig observationer efter den dato,
+der beregnes for.
+
 Kør alle tests:
 
 ```bash
 python -m unittest -v
 ```
 
-Næste trin er at omregne de historiske rådata automatisk til normaliserede
-signaler. LLM-laget tilføjes først, når talmodellen kan
+Næste trin er at validere signalet mod efterfølgende ændringer i guldprisen.
+LLM-laget tilføjes først, når talmodellen kan
 forklare og teste sin egen score.
