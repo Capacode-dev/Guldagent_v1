@@ -131,12 +131,33 @@ Normaliseringen bruger en 20-observations ændring og seriens bagudskuende
 60-observations volatilitet. Den bruger aldrig observationer efter den dato,
 der beregnes for.
 
+### Backtest mod guldprisen
+
+Læg en historisk guldprisfil i `data/input/gold_history.csv` med formatet:
+
+```csv
+date,gold_price
+2026-01-02,2800.50
+2026-01-05,2821.10
+```
+
+Prisen kan være USD eller DKK, men hele filen skal bruge samme valuta og
+samme enhed. Procentafkastet bliver det samme. Kør derefter:
+
+```bash
+python -m guldagent_v2.run_backtest
+```
+
+Backtesten måler, om `OP` og `NED` rammer den efterfølgende bevægelse efter
+5, 20 og 60 guldobservationer. Det er normalt handelsdage, ikke kalenderdage.
+Detaljerne gemmes i `data/processed/backtest_results.csv`.
+
 Kør alle tests:
 
 ```bash
 python -m unittest -v
 ```
 
-Næste trin er at validere signalet mod efterfølgende ændringer i guldprisen.
-LLM-laget tilføjes først, når talmodellen kan
+Næste trin er at vælge og koble en stabil historisk guldpriskilde på denne
+leverandøruafhængige backtest. LLM-laget tilføjes først, når talmodellen kan
 forklare og teste sin egen score.
