@@ -133,7 +133,18 @@ der beregnes for.
 
 ### Backtest mod guldprisen
 
-Læg en historisk guldprisfil i `data/input/gold_history.csv` med formatet:
+Hent den daglige del af FreeGoldAPI-datasættet:
+
+```bash
+python -m guldagent_v2.build_gold_history --start 2025-01-01
+```
+
+Der kræves ingen API-nøgle. Klienten beholder kun rækker med kilden
+`yahoo_finance`, fordi ældre FreeGoldAPI-data har månedlig eller årlig
+frekvens og derfor ikke kan bruges som handelsdage. Hvis seneste observation
+er mere end syv dage gammel, vises en advarsel.
+
+Filen gemmes i `data/input/gold_history.csv` med formatet:
 
 ```csv
 date,gold_price
@@ -141,8 +152,7 @@ date,gold_price
 2026-01-05,2821.10
 ```
 
-Prisen kan være USD eller DKK, men hele filen skal bruge samme valuta og
-samme enhed. Procentafkastet bliver det samme. Kør derefter:
+FreeGoldAPI-prisen er USD pr. troy ounce. Kør derefter:
 
 ```bash
 python -m guldagent_v2.run_backtest
@@ -158,6 +168,6 @@ Kør alle tests:
 python -m unittest -v
 ```
 
-Næste trin er at vælge og koble en stabil historisk guldpriskilde på denne
-leverandøruafhængige backtest. LLM-laget tilføjes først, når talmodellen kan
+FreeGoldAPI bruges til den foreløbige historiske MVP-test, mens GoldAPI fortsat
+bruges til den aktuelle pris. LLM-laget tilføjes først, når talmodellen kan
 forklare og teste sin egen score.
