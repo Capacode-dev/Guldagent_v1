@@ -48,7 +48,8 @@ def lav_llm_analyse(resultat, dato, client, model="gpt-5.4-mini"):
         "dato": dato,
         "beregnet_retning": resultat.retning,
         "score": resultat.score,
-        "foreloebig_sikkerhed_procent": resultat.sikkerhed,
+        "signalstyrke_procent": resultat.signalstyrke,
+        "fuld_model_datadaekning_procent": resultat.datadaekning,
         "antal_manglende_variable": len(resultat.mangler),
         "drivere": drivere,
     }
@@ -74,4 +75,3 @@ def lav_llm_analyse(resultat, dato, client, model="gpt-5.4-mini"):
     )
     data = json.loads(response.output_text)
     return LlmAnalyse(**data)
-

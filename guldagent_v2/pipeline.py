@@ -6,6 +6,7 @@ from guldagent_v2.analyze_latest import analyser_seneste
 from guldagent_v2.backtest import koer_backtest
 from guldagent_v2.build_gold_history import gem_guldhistorik
 from guldagent_v2.dataset import byg_mvp_dataset
+from guldagent_v2.data_sources import MVP_COLUMNS
 from guldagent_v2.llm_analysis import lav_llm_analyse
 from guldagent_v2.normalizer import normaliser_dataset
 from guldagent_v2.report import byg_rapport, gem_rapport
@@ -47,6 +48,7 @@ def koer_mvp_pipeline(
         signal_path,
         gold_path,
         processed_dir / "backtest_results.csv",
+        required_features=MVP_COLUMNS,
     )
     dato, signal_resultat = analyser_seneste(signal_path)
 
@@ -75,4 +77,3 @@ def koer_mvp_pipeline(
         backtest_signaler=backtest.antal_signaler,
         llm_brugt=llm_analyse is not None,
     )
-

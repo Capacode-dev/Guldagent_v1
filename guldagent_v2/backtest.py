@@ -1,4 +1,5 @@
 import csv
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,9 +11,18 @@ class BacktestSummary:
     antal_signaler: int
     traefsikkerhed: dict[int, float]
     gennemsnitligt_afkast: dict[int, float]
+    altid_op_baseline: dict[int, float]
+    vurderbare_signaler: dict[int, int]
+    signalfordeling: dict[str, int]
 
 
-def koer_backtest(signal_path, gold_path, output_path=None, horisonter=(5, 20, 60)):
+def koer_backtest(
+    signal_path,
+    gold_path,
+    output_path=None,
+    horisonter=(5, 20, 60),
+    required_features=(),
+):
     """Sammenlign historiske signaler med senere guldafkast."""
     signal_rows = _laes_csv(signal_path)
     gold_rows = _laes_guld(gold_path)
@@ -29,7 +39,7 @@ def koer_backtest(signal_path, gold_path, output_path=None, horisonter=(5, 20, 6
             for key, value in row.items()
             if key != "date" and value not in (None, "")
         }
-        if not signaler:
+        if not signaler or not all(feature in signaler for feature in required_features):
             continue
 
         resultat = beregn_signal(signaler)
@@ -61,6 +71,8 @@ def koer_backtest(signal_path, gold_path, output_path=None, horisonter=(5, 20, 6
 def opsummer_backtest(rows, horisonter=(5, 20, 60)):
     traefsikkerhed = {}
     gennemsnitligt_afkast = {}
+    altid_op_baseline = {}
+    vurderbare_signaler = {}
 
     for horisont in horisonter:
         kolonne = f"return_{horisont}d"
@@ -76,8 +88,21 @@ def opsummer_backtest(rows, horisonter=(5, 20, 60)):
             round(sum(row[kolonne] for row in vurderbare) / len(vurderbare), 4)
             if vurderbare else 0.0
         )
+        altid_op_baseline[horisont] = (
+            round(sum(row[kolonne] > 0 for row in vurderbare) / len(vurderbare) * 100, 2)
+            if vurderbare else 0.0
+        )
+        vurderbare_signaler[horisont] = len(vurderbare)
 
-    return BacktestSummary(len(rows), traefsikkerhed, gennemsnitligt_afkast)
+    signalfordeling = dict(Counter(row["direction"] for row in rows))
+    return BacktestSummary(
+        len(rows),
+        traefsikkerhed,
+        gennemsnitligt_afkast,
+        altid_op_baseline,
+        vurderbare_signaler,
+        signalfordeling,
+    )
 
 
 def _laes_csv(path):
@@ -103,4 +128,3 @@ def _skriv_resultater(path, rows, horisonter):
         writer = csv.DictWriter(fil, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-

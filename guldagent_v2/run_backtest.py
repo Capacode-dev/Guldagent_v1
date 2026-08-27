@@ -1,6 +1,7 @@
 import argparse
 
 from guldagent_v2.backtest import koer_backtest
+from guldagent_v2.data_sources import MVP_COLUMNS
 
 
 def main():
@@ -10,13 +11,18 @@ def main():
     parser.add_argument("--output", default="data/processed/backtest_results.csv")
     args = parser.parse_args()
 
-    _, summary = koer_backtest(args.signals, args.gold, args.output)
+    _, summary = koer_backtest(
+        args.signals,
+        args.gold,
+        args.output,
+        required_features=MVP_COLUMNS,
+    )
     print(f"Antal signaler: {summary.antal_signaler}")
     for horisont, accuracy in summary.traefsikkerhed.items():
         print(f"Træfsikkerhed efter {horisont} dage: {accuracy:.2f}%")
+        print(f"Altid-OP baseline efter {horisont} dage: {summary.altid_op_baseline[horisont]:.2f}%")
     print(f"Detaljer gemt: {args.output}")
 
 
 if __name__ == "__main__":
     main()
-

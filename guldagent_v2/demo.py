@@ -16,7 +16,8 @@ def main():
 
     print(f"Retning: {resultat.retning}")
     print(f"Score: {resultat.score:+.3f}")
-    print(f"Foreløbig sikkerhed: {resultat.sikkerhed}%")
+    print(f"Signalstyrke: {resultat.signalstyrke}%")
+    print(f"Fuld modeldækning: {resultat.datadaekning}%")
     print("Vigtigste drivere:")
     for noegle, bidrag in vigtigste_drivere(resultat):
         print(f"- {FEATURES[noegle].navn}: {bidrag:+.3f}")
@@ -25,4 +26,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

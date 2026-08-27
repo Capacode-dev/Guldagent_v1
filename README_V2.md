@@ -97,7 +97,8 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 - `OP`: vægtet score er mindst `+0.20`
 - `NED`: vægtet score er højst `-0.20`
 - `NEUTRAL`: score ligger mellem grænserne
-- sikkerheden er foreløbig og falder, når mange af de planlagte 20 variable mangler
+- signalstyrken er den absolutte score; den er ikke en statistisk sandsynlighed
+- MVP-dækningen skal være 5/5, mens fuld modeldækning foreløbig er 5/20
 - backtesten er en teknisk validering, ikke et løfte om fremtidigt afkast
 
 ## Kendte MVP-begrænsninger
@@ -108,6 +109,8 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 - FreeGoldAPI kan være forsinket; rapporten viser datakildens alder
 - 2025+ guldserien er futuresdata, mens GoldAPI i v1 leverer spotpris
 - vægte og grænser er hypoteser, indtil backtesten har tilstrækkelige observationer
+- daglige backtest-signaler overlapper og er derfor ikke uafhængige observationer
+- træfsikkerheden skal sammenlignes med rapportens simple altid-OP-baseline
 - LLM'en forklarer kun modellen og må ikke skabe eller ændre tal
 
 Guldagent v2 er et analyse- og læringsprojekt, ikke personlig

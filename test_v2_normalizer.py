@@ -49,10 +49,34 @@ class NormalizerTests(unittest.TestCase):
                 writer.writerow(["2026-01-01", "", ""])
                 writer.writerow(["2026-01-02", -1, 1])
 
-            dato, resultat = analyser_seneste(path)
+            dato, resultat = analyser_seneste(
+                path,
+                required_features=("realrente_10aar", "vix"),
+            )
 
         self.assertEqual(dato, "2026-01-02")
         self.assertEqual(resultat.retning, "OP")
+
+    def test_live_analyse_vaelger_seneste_dato_med_alle_fem_signaler(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "signals.csv"
+            with path.open("w", newline="", encoding="utf-8") as fil:
+                writer = csv.writer(fil)
+                writer.writerow([
+                    "date",
+                    "realrente_10aar",
+                    "dollarindeks",
+                    "inflationsforventning",
+                    "vix",
+                    "fed_forventning",
+                ])
+                writer.writerow(["2026-01-02", -0.2, -0.2, 0.2, 0.2, -0.2])
+                writer.writerow(["2026-01-03", "", "", 0.3, 0.3, ""])
+
+            dato, resultat = analyser_seneste(path)
+
+        self.assertEqual(dato, "2026-01-02")
+        self.assertEqual(len(resultat.bidrag), 5)
 
 
 if __name__ == "__main__":

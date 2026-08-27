@@ -7,7 +7,8 @@ from guldagent_v2.features import FEATURES
 class SignalResultat:
     score: float
     retning: str
-    sikkerhed: int
+    signalstyrke: int
+    datadaekning: int
     bidrag: dict[str, float]
     mangler: list[str]
 
@@ -38,13 +39,12 @@ def beregn_signal(signaler: dict[str, float]) -> SignalResultat:
     else:
         retning = "NEUTRAL"
 
-    datadaekning = len(signaler) / len(FEATURES)
-    sikkerhed = round(min(abs(score), 1.0) * datadaekning * 100)
+    signalstyrke = round(min(abs(score), 1.0) * 100)
+    datadaekning = round(len(signaler) / len(FEATURES) * 100)
     mangler = sorted(set(FEATURES) - set(signaler))
 
-    return SignalResultat(score, retning, sikkerhed, bidrag, mangler)
+    return SignalResultat(score, retning, signalstyrke, datadaekning, bidrag, mangler)
 
 
 def vigtigste_drivere(resultat: SignalResultat, antal=3):
     return sorted(resultat.bidrag.items(), key=lambda item: abs(item[1]), reverse=True)[:antal]
-

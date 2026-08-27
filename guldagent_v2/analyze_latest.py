@@ -2,10 +2,11 @@ import argparse
 import csv
 
 from guldagent_v2.features import FEATURES
+from guldagent_v2.data_sources import MVP_COLUMNS
 from guldagent_v2.signal_model import beregn_signal, vigtigste_drivere
 
 
-def analyser_seneste(signal_path):
+def analyser_seneste(signal_path, required_features=MVP_COLUMNS):
     with open(signal_path, encoding="utf-8") as fil:
         rows = list(csv.DictReader(fil))
 
@@ -15,10 +16,10 @@ def analyser_seneste(signal_path):
             for noegle, value in row.items()
             if noegle != "date" and value not in (None, "")
         }
-        if signaler:
+        if signaler and all(feature in signaler for feature in required_features):
             return row["date"], beregn_signal(signaler)
 
-    raise ValueError("Signalfilen indeholder ingen beregnede signaler")
+    raise ValueError("Signalfilen indeholder ingen dato med alle krævede MVP-signaler")
 
 
 def main():
@@ -30,7 +31,8 @@ def main():
     print(f"Dato: {dato}")
     print(f"Retning: {resultat.retning}")
     print(f"Score: {resultat.score:+.3f}")
-    print(f"Foreløbig sikkerhed: {resultat.sikkerhed}%")
+    print(f"Signalstyrke: {resultat.signalstyrke}%")
+    print(f"Fuld modeldækning: {resultat.datadaekning}%")
     print("Vigtigste drivere:")
     for noegle, bidrag in vigtigste_drivere(resultat):
         print(f"- {FEATURES[noegle].navn}: {bidrag:+.3f}")
@@ -38,4 +40,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -36,6 +36,8 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(rows[0]["return_20d"], 20.0)
         self.assertEqual(rows[0]["return_60d"], 60.0)
         self.assertEqual(summary.traefsikkerhed[20], 100.0)
+        self.assertEqual(summary.altid_op_baseline[20], 100.0)
+        self.assertEqual(summary.signalfordeling, {"OP": 1})
 
     def test_udelader_horisont_uden_nok_senere_priser(self):
         with tempfile.TemporaryDirectory() as directory:

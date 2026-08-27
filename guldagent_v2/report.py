@@ -3,6 +3,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from guldagent_v2.features import FEATURES
+from guldagent_v2.data_sources import MVP_COLUMNS
 from guldagent_v2.signal_model import vigtigste_drivere
 
 
@@ -19,7 +20,10 @@ def byg_rapport(dato, resultat, backtest=None, llm_analyse=None, gold_status=Non
         "dato": dato,
         "retning": resultat.retning,
         "score": resultat.score,
-        "sikkerhed": resultat.sikkerhed,
+        "signalstyrke": resultat.signalstyrke,
+        "datadaekning_fuld_model": resultat.datadaekning,
+        "mvp_signaler_brugt": len(set(resultat.bidrag) & set(MVP_COLUMNS)),
+        "mvp_signaler_total": len(MVP_COLUMNS),
         "drivere": drivere,
         "manglende_variable": resultat.mangler,
         "backtest": asdict(backtest) if backtest else None,
@@ -48,7 +52,9 @@ def _til_markdown(rapport):
         f"**Dato:** {rapport['dato']}",
         f"**Retning:** {rapport['retning']}",
         f"**Score:** {rapport['score']:+.3f}",
-        f"**Foreløbig sikkerhed:** {rapport['sikkerhed']}%",
+        f"**Signalstyrke:** {rapport['signalstyrke']}%",
+        f"**MVP-dækning:** {rapport['mvp_signaler_brugt']}/{rapport['mvp_signaler_total']}",
+        f"**Fuld modeldækning:** {rapport['datadaekning_fuld_model']}%",
         "",
         "## Vigtigste drivere",
         "",
@@ -61,6 +67,10 @@ def _til_markdown(rapport):
         lines.extend(["", "## Backtest", "", f"Antal signaler: {backtest['antal_signaler']}", ""])
         for horisont, accuracy in backtest["traefsikkerhed"].items():
             lines.append(f"- {horisont} observationer: {accuracy:.2f}% træfsikkerhed")
+        lines.extend(["", "Sammenligningsbaseline (altid OP):", ""])
+        for horisont, baseline in backtest["altid_op_baseline"].items():
+            lines.append(f"- {horisont} observationer: {baseline:.2f}%")
+        lines.extend(["", f"Signalfordeling: {backtest['signalfordeling']}"])
 
     gold = rapport.get("gulddata")
     if gold:

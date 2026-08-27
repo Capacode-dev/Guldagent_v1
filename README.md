@@ -162,7 +162,9 @@ python -m guldagent_v2.run_backtest
 
 Backtesten måler, om `OP` og `NED` rammer den efterfølgende bevægelse efter
 5, 20 og 60 guldobservationer. Det er normalt handelsdage, ikke kalenderdage.
-Detaljerne gemmes i `data/processed/backtest_results.csv`.
+Kun datoer med alle fem MVP-variable medregnes. Resultatet sammenlignes med
+en simpel altid-OP-baseline. Detaljerne gemmes i
+`data/processed/backtest_results.csv`.
 
 Kør alle tests:
 

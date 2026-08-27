@@ -22,3 +22,4 @@ MVP_SERIES = (
     ),
 )
 
+MVP_COLUMNS = tuple(source.kolonne for source in MVP_SERIES)
