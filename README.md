@@ -83,6 +83,8 @@ git push
 
 ## Guldagent v2 – første signalmodel
 
+Den komplette MVP-vejledning findes i [README_V2.md](README_V2.md).
+
 V2 kombinerer 20 makro- og markedsvariable til en forklarlig retning:
 `OP`, `NEUTRAL` eller `NED`. Hver variabel leverer senere et normaliseret
 signal mellem `-1` og `1`. Modellen viser både samlet score, datadækning og

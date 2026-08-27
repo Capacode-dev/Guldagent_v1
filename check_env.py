@@ -6,6 +6,8 @@ load_dotenv()
 VARIABLES = (
     "GOLD_API_KEY",
     "FRED_API_KEY",
+    "OPENAI_API_KEY",
+    "OPENAI_MODEL",
     "HEMMELIG_MODTAGER",
     "BRIDGE_USERNAME",
     "BRIDGE_PASSWORD",
