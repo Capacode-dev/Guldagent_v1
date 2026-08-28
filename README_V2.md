@@ -7,10 +7,10 @@ at kunne ændre score eller retning.
 ## Hvad MVP'en indeholder
 
 - fem automatiske makroserier fra FRED
-- daglig historisk XAU/USD-lukkepris fra Stooq til backtest
+- månedligt historisk guldgennemsnit fra World Bank via FreeGoldAPI
 - normalisering til sammenlignelige signaler mellem `-1` og `1`
 - vægtet og forklarlig signalmodel
-- backtest efter 5, 20 og 60 guldobservationer
+- backtest efter 1, 3 og 12 måneder
 - valgfri LLM-forklaring via OpenAI Responses API
 - JSON- og Markdown-rapport
 - dry-run uden LLM og 22 automatiske tests
@@ -105,14 +105,20 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 
 - kun fem af de planlagte cirka 20 variable hentes automatisk
 - den 2-årige amerikanske rente er en proxy for Fed-forventninger
-- hovedpipelinen bruger Stooqs XAU/USD-lukkepris som historisk reference;
-  den er en backtestserie og ikke Guldagent v1's aktuelle GoldAPI-spotpris
-- FRED-serien `GOLDAMGBD228NLBM` er udfaset og bruges derfor ikke
+- hovedpipelinen bruger World Banks månedlige guldgennemsnit fra 1960 til
+  2024 som historisk reference; fællesperioden bestemmes af makroserierne
+- månedsprisen er en afsluttet periodes gennemsnit og ikke Guldagent v1's
+  aktuelle GoldAPI-spotpris
+- månedsbacktesten bruger månedens sidste komplette makrosignal og måler
+  udviklingen i de efterfølgende 1, 3 og 12 månedsgennemsnit
+- FRED-guldserien er udfaset, Stooq kræver browserkontrol, og Yahoo
+  ratebegrænser automatiske kald; de bruges derfor ikke i hovedpipelinen
 - FreeGoldAPI-klienten er bevaret som et separat eksperiment, men dens
   daglige `yahoo_finance`-del dækker ikke en lang markedscyklus
 - historisk London-fix og GoldAPI-spotprisen i v1 er forskellige dataserier
 - vægte og grænser er hypoteser, indtil backtesten har tilstrækkelige observationer
-- daglige backtest-signaler overlapper og er derfor ikke uafhængige observationer
+- 3- og 12-måneders backtestsignaler overlapper og er derfor ikke fuldt
+  uafhængige observationer
 - træfsikkerheden sammenlignes med altid-OP-baseline på præcis de samme
   datoer, hvor modellen afgiver OP eller NED
 - LLM'en forklarer kun modellen og må ikke skabe eller ændre tal

@@ -20,9 +20,9 @@ class PipelineTests(unittest.TestCase):
             for index, dato in enumerate(datoer)
         ]
         gold_client = Mock()
-        gold_client.hent_daglige_priser.return_value = [
-            (dato, 2600 + index * 2, "yahoo_finance")
-            for index, dato in enumerate(datoer)
+        gold_client.hent_maanedlige_priser.return_value = [
+            (f"2025-{month:02d}-01", 2600 + month * 20, "worldbank")
+            for month in range(1, 5)
         ]
 
         with tempfile.TemporaryDirectory() as directory:
@@ -44,6 +44,7 @@ class PipelineTests(unittest.TestCase):
             self.assertGreater(len(backtest_rows), 0)
             self.assertIn("samme datoer", rapport)
             self.assertIn("Historiske backtestdata", rapport)
+            self.assertIn("1 måned", rapport)
 
         self.assertFalse(resultat.llm_brugt)
         self.assertIn(resultat.retning, {"OP", "NEUTRAL", "NED"})

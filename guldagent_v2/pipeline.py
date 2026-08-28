@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from guldagent_v2.analyze_latest import analyser_seneste
-from guldagent_v2.backtest import koer_backtest
+from guldagent_v2.backtest import koer_maanedsbacktest
 from guldagent_v2.build_gold_history import gem_guldhistorik
 from guldagent_v2.dataset import byg_mvp_dataset
 from guldagent_v2.data_sources import MVP_COLUMNS
@@ -38,12 +38,12 @@ def koer_mvp_pipeline(
     macro_path = byg_mvp_dataset(fred_client, startdato, slutdato, output_dir)
     signal_path = normaliser_dataset(macro_path, processed_dir / "macro_signals.csv")
 
-    guldpriser = gold_client.hent_daglige_priser(startdato, slutdato)
+    guldpriser = gold_client.hent_maanedlige_priser(startdato, slutdato)
     if not guldpriser:
-        raise RuntimeError("Guldkilden returnerede ingen daglige priser")
+        raise RuntimeError("Guldkilden returnerede ingen månedlige priser")
     gold_path = gem_guldhistorik(guldpriser, input_dir / "gold_history.csv")
 
-    _, backtest = koer_backtest(
+    _, backtest = koer_maanedsbacktest(
         signal_path,
         gold_path,
         processed_dir / "backtest_results.csv",
@@ -60,7 +60,7 @@ def koer_mvp_pipeline(
         source_name = guldpriser[-1][2]
     gold_status = {
         "kilde": source_name,
-        "rolle": "Historisk reference til backtest",
+        "rolle": "Historisk månedsreference til backtest",
         "antal_observationer": len(guldpriser),
         "foerste_dato": guldpriser[0][0],
         "seneste_dato": guldpriser[-1][0],

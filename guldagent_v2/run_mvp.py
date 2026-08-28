@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from guldagent_v2.fred_client import FredClient
 from guldagent_v2.pipeline import koer_mvp_pipeline
-from guldagent_v2.stooq_gold_client import StooqGoldClient
+from guldagent_v2.worldbank_gold_client import WorldBankGoldClient
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
 
     load_dotenv()
     fred_client = FredClient(os.getenv("FRED_API_KEY"))
-    gold_client = StooqGoldClient()
+    gold_client = WorldBankGoldClient()
 
     llm_client = None
     openai_key = os.getenv("OPENAI_API_KEY")

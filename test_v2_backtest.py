@@ -4,7 +4,7 @@ import unittest
 from datetime import date, timedelta
 from pathlib import Path
 
-from guldagent_v2.backtest import koer_backtest
+from guldagent_v2.backtest import koer_backtest, koer_maanedsbacktest
 
 
 class BacktestTests(unittest.TestCase):
@@ -75,6 +75,38 @@ class BacktestTests(unittest.TestCase):
 
         self.assertEqual(rows[0]["return_5d"], "")
         self.assertEqual(summary.traefsikkerhed[5], 0.0)
+
+    def test_maanedsbacktest_bruger_maanedens_sidste_komplette_signal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            signals = directory / "signals.csv"
+            gold = directory / "gold.csv"
+
+            with signals.open("w", newline="", encoding="utf-8") as fil:
+                writer = csv.writer(fil)
+                writer.writerow(["date", "vix"])
+                writer.writerow(["2026-01-10", -1])
+                writer.writerow(["2026-01-30", 1])
+                writer.writerow(["2026-02-27", 1])
+
+            with gold.open("w", newline="", encoding="utf-8") as fil:
+                writer = csv.writer(fil)
+                writer.writerow(["date", "gold_price"])
+                writer.writerow(["2026-01-01", 100])
+                writer.writerow(["2026-02-01", 110])
+
+            rows, summary = koer_maanedsbacktest(
+                signals,
+                gold,
+                horisonter=(1,),
+                required_features=("vix",),
+            )
+
+        self.assertEqual(rows[0]["date"], "2026-01-30")
+        self.assertEqual(rows[0]["gold_month"], "2026-01-01")
+        self.assertEqual(rows[0]["direction"], "OP")
+        self.assertEqual(rows[0]["return_1m"], 10.0)
+        self.assertEqual(summary.horisont_enhed, "måneder")
 
 
 if __name__ == "__main__":

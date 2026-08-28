@@ -67,13 +67,15 @@ def _til_markdown(rapport):
         lines.extend(["", "## Backtest", "", f"Antal signaler: {backtest['antal_signaler']}", ""])
         for horisont, accuracy in backtest["traefsikkerhed"].items():
             antal = backtest["retningssignaler"][horisont]
+            enhed = _format_enhed(horisont, backtest["horisont_enhed"])
             lines.append(
-                f"- {horisont} observationer: {accuracy:.2f}% træfsikkerhed "
+                f"- {horisont} {enhed}: {accuracy:.2f}% træfsikkerhed "
                 f"({antal} OP/NED-signaler)"
             )
         lines.extend(["", "Sammenligningsbaseline (altid OP på de samme datoer):", ""])
         for horisont, baseline in backtest["altid_op_baseline"].items():
-            lines.append(f"- {horisont} observationer: {baseline:.2f}%")
+            enhed = _format_enhed(horisont, backtest["horisont_enhed"])
+            lines.append(f"- {horisont} {enhed}: {baseline:.2f}%")
         lines.extend(["", f"Signalfordeling: {backtest['signalfordeling']}"])
 
     gold = rapport.get("gulddata")
@@ -104,3 +106,9 @@ def _til_markdown(rapport):
 
     lines.extend(["", "---", "", rapport["disclaimer"], ""])
     return "\n".join(lines)
+
+
+def _format_enhed(horisont, enhed):
+    if int(horisont) == 1 and enhed == "måneder":
+        return "måned"
+    return enhed

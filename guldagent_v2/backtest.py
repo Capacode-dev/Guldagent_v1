@@ -15,6 +15,7 @@ class BacktestSummary:
     vurderbare_signaler: dict[int, int]
     retningssignaler: dict[int, int]
     signalfordeling: dict[str, int]
+    horisont_enhed: str
 
 
 def koer_backtest(
@@ -69,7 +70,78 @@ def koer_backtest(
     return output_rows, opsummer_backtest(output_rows, horisonter)
 
 
-def opsummer_backtest(rows, horisonter=(5, 20, 60)):
+def koer_maanedsbacktest(
+    signal_path,
+    gold_path,
+    output_path=None,
+    horisonter=(1, 3, 12),
+    required_features=(),
+):
+    """Test månedsguld mod månedens sidste komplette makrosignal."""
+    signal_rows = _laes_csv(signal_path)
+    gold_rows = _laes_guld(gold_path)
+    seneste_signal_i_maaned = {}
+
+    for row in signal_rows:
+        signaler = {
+            key: float(value)
+            for key, value in row.items()
+            if key != "date" and value not in (None, "")
+        }
+        if not signaler or not all(feature in signaler for feature in required_features):
+            continue
+        seneste_signal_i_maaned[row["date"][:7]] = (
+            row["date"],
+            beregn_signal(signaler),
+            len(signaler),
+        )
+
+    output_rows = []
+    for start_index, (gold_date, start_price) in enumerate(gold_rows):
+        signal = seneste_signal_i_maaned.get(gold_date[:7])
+        if not signal:
+            continue
+        signal_date, resultat, coverage = signal
+        output_row = {
+            "date": signal_date,
+            "gold_month": gold_date,
+            "score": resultat.score,
+            "direction": resultat.retning,
+            "coverage": coverage,
+        }
+        for horisont in horisonter:
+            target_index = start_index + horisont
+            kolonne = f"return_{horisont}m"
+            if target_index >= len(gold_rows):
+                output_row[kolonne] = ""
+            else:
+                target_price = gold_rows[target_index][1]
+                output_row[kolonne] = round((target_price / start_price - 1) * 100, 4)
+        output_rows.append(output_row)
+
+    if output_path:
+        _skriv_resultater(
+            output_path,
+            output_rows,
+            horisonter,
+            suffix="m",
+            ekstra_felter=("gold_month",),
+        )
+
+    return output_rows, opsummer_backtest(
+        output_rows,
+        horisonter,
+        suffix="m",
+        horisont_enhed="måneder",
+    )
+
+
+def opsummer_backtest(
+    rows,
+    horisonter=(5, 20, 60),
+    suffix="d",
+    horisont_enhed="guldobservationer",
+):
     traefsikkerhed = {}
     gennemsnitligt_afkast = {}
     altid_op_baseline = {}
@@ -77,7 +149,7 @@ def opsummer_backtest(rows, horisonter=(5, 20, 60)):
     retningssignaler_antal = {}
 
     for horisont in horisonter:
-        kolonne = f"return_{horisont}d"
+        kolonne = f"return_{horisont}{suffix}"
         vurderbare = [row for row in rows if row.get(kolonne) not in (None, "")]
         retningssignaler = [row for row in vurderbare if row["direction"] in ("OP", "NED")]
         korrekte = [
@@ -108,6 +180,7 @@ def opsummer_backtest(rows, horisonter=(5, 20, 60)):
         vurderbare_signaler,
         retningssignaler_antal,
         signalfordeling,
+        horisont_enhed,
     )
 
 
@@ -126,10 +199,17 @@ def _laes_guld(path):
     return sorted(resultat)
 
 
-def _skriv_resultater(path, rows, horisonter):
+def _skriv_resultater(path, rows, horisonter, suffix="d", ekstra_felter=()):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["date", "score", "direction", "coverage", *[f"return_{h}d" for h in horisonter]]
+    fieldnames = [
+        "date",
+        *ekstra_felter,
+        "score",
+        "direction",
+        "coverage",
+        *[f"return_{h}{suffix}" for h in horisonter],
+    ]
     with path.open("w", newline="", encoding="utf-8") as fil:
         writer = csv.DictWriter(fil, fieldnames=fieldnames)
         writer.writeheader()
