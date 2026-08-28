@@ -7,7 +7,7 @@ at kunne ændre score eller retning.
 ## Hvad MVP'en indeholder
 
 - fem automatiske makroserier fra FRED
-- daglig historisk London-guldpris fra FRED til backtest
+- daglig historisk XAU/USD-lukkepris fra Stooq til backtest
 - normalisering til sammenlignelige signaler mellem `-1` og `1`
 - vægtet og forklarlig signalmodel
 - backtest efter 5, 20 og 60 guldobservationer
@@ -105,8 +105,9 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 
 - kun fem af de planlagte cirka 20 variable hentes automatisk
 - den 2-årige amerikanske rente er en proxy for Fed-forventninger
-- hovedpipelinen bruger FRED-serien `GOLDAMGBD228NLBM` som historisk
-  reference; den slutter i 2022 og er ikke en aktuel guldpris
+- hovedpipelinen bruger Stooqs XAU/USD-lukkepris som historisk reference;
+  den er en backtestserie og ikke Guldagent v1's aktuelle GoldAPI-spotpris
+- FRED-serien `GOLDAMGBD228NLBM` er udfaset og bruges derfor ikke
 - FreeGoldAPI-klienten er bevaret som et separat eksperiment, men dens
   daglige `yahoo_finance`-del dækker ikke en lang markedscyklus
 - historisk London-fix og GoldAPI-spotprisen i v1 er forskellige dataserier

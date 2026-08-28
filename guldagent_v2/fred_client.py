@@ -23,8 +23,25 @@ class FredClient:
             "observation_end": slutdato,
             "sort_order": "asc",
         }
-        response = self.session.get(self.BASE_URL, params=params, timeout=self.timeout)
-        response.raise_for_status()
+        try:
+            response = self.session.get(self.BASE_URL, params=params, timeout=self.timeout)
+        except requests.RequestException:
+            raise RuntimeError(
+                f"FRED-forbindelsen fejlede for serien {series_id}"
+            ) from None
+        try:
+            response.raise_for_status()
+        except requests.HTTPError:
+            # requests' standardfejl indeholder hele URL'en og dermed
+            # api_key. Giv en brugbar fejl uden at lække hemmeligheden.
+            try:
+                fejl = response.json().get("error_message", "Ukendt FRED-fejl")
+            except (ValueError, AttributeError):
+                fejl = "Ukendt FRED-fejl"
+            raise RuntimeError(
+                f"FRED kunne ikke hente serien {series_id} "
+                f"(HTTP {response.status_code}): {fejl}"
+            ) from None
         payload = response.json()
 
         resultat = []
@@ -34,4 +51,3 @@ class FredClient:
                 continue
             resultat.append((observation["date"], float(value)))
         return resultat
-

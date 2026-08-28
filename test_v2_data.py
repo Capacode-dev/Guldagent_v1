@@ -4,6 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock
 
+import requests
+
 from guldagent_v2.dataset import byg_mvp_dataset
 from guldagent_v2.fred_client import FredClient
 
@@ -25,6 +27,36 @@ class FredClientTests(unittest.TestCase):
 
         self.assertEqual(result, [("2026-01-02", 2.5)])
         response.raise_for_status.assert_called_once()
+
+    def test_http_fejl_skjuler_api_noeglen(self):
+        response = Mock()
+        response.status_code = 400
+        response.raise_for_status.side_effect = requests.HTTPError(
+            "400 for url: https://example.test?api_key=hemmelig"
+        )
+        response.json.return_value = {"error_message": "Serien findes ikke"}
+        session = Mock()
+        session.get.return_value = response
+
+        client = FredClient("hemmelig", session=session)
+        with self.assertRaises(RuntimeError) as context:
+            client.hent_serie("UKENDT", "2026-01-01", "2026-01-02")
+
+        self.assertNotIn("hemmelig", str(context.exception))
+        self.assertIn("UKENDT", str(context.exception))
+
+    def test_forbindelsesfejl_skjuler_api_noeglen(self):
+        session = Mock()
+        session.get.side_effect = requests.ConnectionError(
+            "fejl ved https://example.test?api_key=hemmelig"
+        )
+
+        client = FredClient("hemmelig", session=session)
+        with self.assertRaises(RuntimeError) as context:
+            client.hent_serie("DFII10", "2026-01-01", "2026-01-02")
+
+        self.assertNotIn("hemmelig", str(context.exception))
+        self.assertIn("DFII10", str(context.exception))
 
 
 class DatasetTests(unittest.TestCase):
