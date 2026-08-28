@@ -56,6 +56,9 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(summary.altid_op_baseline[5], 0.0)
         self.assertEqual(summary.vurderbare_signaler[5], 4)
         self.assertEqual(summary.retningssignaler[5], 2)
+        self.assertEqual(summary.traefsikkerhed_pr_retning[5]["OP"], 0.0)
+        self.assertEqual(summary.traefsikkerhed_pr_retning[5]["NED"], 100.0)
+        self.assertEqual(summary.antal_pr_retning[5], {"OP": 1, "NED": 1})
 
     def test_udelader_horisont_uden_nok_senere_priser(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -107,6 +110,45 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(rows[0]["direction"], "OP")
         self.assertEqual(rows[0]["return_1m"], 10.0)
         self.assertEqual(summary.horisont_enhed, "måneder")
+
+    def test_maanedsbacktest_deler_reference_og_senere_test(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            signals = directory / "signals.csv"
+            gold = directory / "gold.csv"
+
+            with signals.open("w", newline="", encoding="utf-8") as fil:
+                writer = csv.writer(fil)
+                writer.writerow(["date", "vix"])
+                writer.writerow(["2018-12-28", 1])
+                writer.writerow(["2019-01-31", 1])
+                writer.writerow(["2019-02-28", 1])
+
+            with gold.open("w", newline="", encoding="utf-8") as fil:
+                writer = csv.writer(fil)
+                writer.writerow(["date", "gold_price"])
+                writer.writerow(["2018-12-01", 100])
+                writer.writerow(["2019-01-01", 105])
+                writer.writerow(["2019-02-01", 110])
+
+            _, summary = koer_maanedsbacktest(
+                signals,
+                gold,
+                horisonter=(1,),
+                required_features=("vix",),
+                test_startdato="2019-01-01",
+            )
+
+        self.assertEqual(summary.delperioder["reference"]["antal_signaler"], 1)
+        self.assertEqual(summary.delperioder["senere_test"]["antal_signaler"], 2)
+        self.assertEqual(
+            summary.delperioder["reference"]["retningssignaler"][1],
+            0,
+        )
+        self.assertEqual(
+            summary.delperioder["senere_test"]["periode"],
+            "2019-01 til 2019-02",
+        )
 
 
 if __name__ == "__main__":

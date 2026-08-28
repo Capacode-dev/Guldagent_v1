@@ -71,6 +71,13 @@ Sikker første kørsel uden LLM-omkostning:
 python -m guldagent_v2.run_mvp --start 2010-01-01 --no-llm
 ```
 
+Standardrapporten opdeler desuden historikken ved `2019-01-01`:
+
+- referenceperiode: 2010–2018
+- senere testperiode: 2019–2024
+
+Skæringsdatoen kan ændres med eksempelvis `--test-start 2020-01-01`.
+
 Med LLM-forklaring, når `OPENAI_API_KEY` er sat:
 
 ```bash
@@ -121,6 +128,9 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
   uafhængige observationer
 - træfsikkerheden sammenlignes med altid-OP-baseline på præcis de samme
   datoer, hvor modellen afgiver OP eller NED
+- rapporten viser både samlet resultat, tidsopdelte perioder og OP/NED
+  hver for sig; perioden fra 2019 er en senere tidsopdelt validering, ikke
+  en garanti for et ægte fremtidigt resultat
 - LLM'en forklarer kun modellen og må ikke skabe eller ændre tal
 
 Guldagent v2 er et analyse- og læringsprojekt, ikke personlig

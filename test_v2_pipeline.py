@@ -45,6 +45,9 @@ class PipelineTests(unittest.TestCase):
             self.assertIn("samme datoer", rapport)
             self.assertIn("Historiske backtestdata", rapport)
             self.assertIn("1 måned", rapport)
+            self.assertIn("Referenceperiode", rapport)
+            self.assertIn("Senere testperiode", rapport)
+            self.assertIn("Fordelt efter signal", rapport)
 
         self.assertFalse(resultat.llm_brugt)
         self.assertIn(resultat.retning, {"OP", "NEUTRAL", "NED"})

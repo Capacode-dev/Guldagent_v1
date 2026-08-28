@@ -77,6 +77,30 @@ def _til_markdown(rapport):
             enhed = _format_enhed(horisont, backtest["horisont_enhed"])
             lines.append(f"- {horisont} {enhed}: {baseline:.2f}%")
         lines.extend(["", f"Signalfordeling: {backtest['signalfordeling']}"])
+        lines.extend(["", "Træfsikkerhed opdelt efter signal:", ""])
+        _tilfoej_retningslinjer(lines, backtest)
+
+        for periode in backtest.get("delperioder", {}).values():
+            lines.extend(
+                [
+                    "",
+                    f"### {periode['navn']}",
+                    "",
+                    f"Periode: {periode['periode']}",
+                    f"Antal månedssignaler: {periode['antal_signaler']}",
+                    "",
+                ]
+            )
+            for horisont, accuracy in periode["traefsikkerhed"].items():
+                enhed = _format_enhed(horisont, periode["horisont_enhed"])
+                baseline = periode["altid_op_baseline"][horisont]
+                antal = periode["retningssignaler"][horisont]
+                lines.append(
+                    f"- {horisont} {enhed}: model {accuracy:.2f}%, "
+                    f"altid OP {baseline:.2f}% ({antal} OP/NED-signaler)"
+                )
+            lines.extend(["", "Fordelt efter signal:", ""])
+            _tilfoej_retningslinjer(lines, periode)
 
     gold = rapport.get("gulddata")
     if gold:
@@ -112,3 +136,14 @@ def _format_enhed(horisont, enhed):
     if int(horisont) == 1 and enhed == "måneder":
         return "måned"
     return enhed
+
+
+def _tilfoej_retningslinjer(lines, summary):
+    for horisont, accuracies in summary["traefsikkerhed_pr_retning"].items():
+        enhed = _format_enhed(horisont, summary["horisont_enhed"])
+        op_antal = summary["antal_pr_retning"][horisont]["OP"]
+        ned_antal = summary["antal_pr_retning"][horisont]["NED"]
+        lines.append(
+            f"- {horisont} {enhed}: OP {accuracies['OP']:.2f}% ({op_antal}), "
+            f"NED {accuracies['NED']:.2f}% ({ned_antal})"
+        )

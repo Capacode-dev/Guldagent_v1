@@ -1,6 +1,6 @@
 import csv
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
 from guldagent_v2.signal_model import beregn_signal
@@ -14,8 +14,11 @@ class BacktestSummary:
     altid_op_baseline: dict[int, float]
     vurderbare_signaler: dict[int, int]
     retningssignaler: dict[int, int]
+    traefsikkerhed_pr_retning: dict[int, dict[str, float]]
+    antal_pr_retning: dict[int, dict[str, int]]
     signalfordeling: dict[str, int]
     horisont_enhed: str
+    delperioder: dict[str, dict] = field(default_factory=dict)
 
 
 def koer_backtest(
@@ -76,6 +79,7 @@ def koer_maanedsbacktest(
     output_path=None,
     horisonter=(1, 3, 12),
     required_features=(),
+    test_startdato=None,
 ):
     """Test månedsguld mod månedens sidste komplette makrosignal."""
     signal_rows = _laes_csv(signal_path)
@@ -128,12 +132,41 @@ def koer_maanedsbacktest(
             ekstra_felter=("gold_month",),
         )
 
-    return output_rows, opsummer_backtest(
+    summary = opsummer_backtest(
         output_rows,
         horisonter,
         suffix="m",
         horisont_enhed="måneder",
     )
+    if test_startdato:
+        reference_rows = [
+            row for row in output_rows
+            if row["gold_month"] < test_startdato
+        ]
+        reference_rows = _afgraens_fremtidige_targets(
+            reference_rows,
+            horisonter,
+            test_startdato,
+        )
+        test_rows = [
+            row for row in output_rows
+            if row["gold_month"] >= test_startdato
+        ]
+        delperioder = {
+            "reference": _opsummer_delperiode(
+                "Referenceperiode",
+                reference_rows,
+                horisonter,
+            ),
+            "senere_test": _opsummer_delperiode(
+                "Senere testperiode",
+                test_rows,
+                horisonter,
+            ),
+        }
+        summary = replace(summary, delperioder=delperioder)
+
+    return output_rows, summary
 
 
 def opsummer_backtest(
@@ -147,6 +180,8 @@ def opsummer_backtest(
     altid_op_baseline = {}
     vurderbare_signaler = {}
     retningssignaler_antal = {}
+    traefsikkerhed_pr_retning = {}
+    antal_pr_retning = {}
 
     for horisont in horisonter:
         kolonne = f"return_{horisont}{suffix}"
@@ -170,18 +205,70 @@ def opsummer_backtest(
         )
         vurderbare_signaler[horisont] = len(vurderbare)
         retningssignaler_antal[horisont] = len(retningssignaler)
+        traefsikkerhed_pr_retning[horisont] = {}
+        antal_pr_retning[horisont] = {}
+        for retning in ("OP", "NED"):
+            valgte = [row for row in retningssignaler if row["direction"] == retning]
+            retning_korrekte = [
+                row for row in valgte
+                if (retning == "OP" and row[kolonne] > 0)
+                or (retning == "NED" and row[kolonne] < 0)
+            ]
+            traefsikkerhed_pr_retning[horisont][retning] = (
+                round(len(retning_korrekte) / len(valgte) * 100, 2)
+                if valgte else 0.0
+            )
+            antal_pr_retning[horisont][retning] = len(valgte)
 
     signalfordeling = dict(Counter(row["direction"] for row in rows))
     return BacktestSummary(
-        len(rows),
-        traefsikkerhed,
-        gennemsnitligt_afkast,
-        altid_op_baseline,
-        vurderbare_signaler,
-        retningssignaler_antal,
-        signalfordeling,
-        horisont_enhed,
+        antal_signaler=len(rows),
+        traefsikkerhed=traefsikkerhed,
+        gennemsnitligt_afkast=gennemsnitligt_afkast,
+        altid_op_baseline=altid_op_baseline,
+        vurderbare_signaler=vurderbare_signaler,
+        retningssignaler=retningssignaler_antal,
+        traefsikkerhed_pr_retning=traefsikkerhed_pr_retning,
+        antal_pr_retning=antal_pr_retning,
+        signalfordeling=signalfordeling,
+        horisont_enhed=horisont_enhed,
     )
+
+
+def _opsummer_delperiode(navn, rows, horisonter):
+    summary = opsummer_backtest(
+        rows,
+        horisonter,
+        suffix="m",
+        horisont_enhed="måneder",
+    )
+    data = asdict(summary)
+    data.pop("delperioder")
+    data["navn"] = navn
+    data["periode"] = (
+        f"{rows[0]['gold_month'][:7]} til {rows[-1]['gold_month'][:7]}"
+        if rows else "ingen observationer"
+    )
+    return data
+
+
+def _afgraens_fremtidige_targets(rows, horisonter, slut_foer):
+    resultat = []
+    for original in rows:
+        row = dict(original)
+        for horisont in horisonter:
+            target_maaned = _tilfoej_maaneder(row["gold_month"], horisont)
+            if target_maaned >= slut_foer:
+                row[f"return_{horisont}m"] = ""
+        resultat.append(row)
+    return resultat
+
+
+def _tilfoej_maaneder(dato, antal):
+    aar, maaned, _ = (int(dato_del) for dato_del in dato.split("-"))
+    nulbaseret = aar * 12 + maaned - 1 + antal
+    nyt_aar, ny_maaned = divmod(nulbaseret, 12)
+    return f"{nyt_aar:04d}-{ny_maaned + 1:02d}-01"
 
 
 def _laes_csv(path):

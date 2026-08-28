@@ -16,6 +16,11 @@ def main():
         help="Startdato for makrodata og historisk backtest (standard: 2010-01-01)",
     )
     parser.add_argument("--slut")
+    parser.add_argument(
+        "--test-start",
+        default="2019-01-01",
+        help="Start på senere testperiode (standard: 2019-01-01)",
+    )
     parser.add_argument("--output", default="data")
     parser.add_argument("--no-llm", action="store_true", help="Kør uden OpenAI API-kald")
     args = parser.parse_args()
@@ -41,6 +46,7 @@ def main():
         output_dir=args.output,
         llm_client=llm_client,
         llm_model=os.getenv("OPENAI_MODEL", "gpt-5.4-mini"),
+        test_startdato=args.test_start,
     )
     print(f"Dato: {resultat.dato}")
     print(f"Retning: {resultat.retning}")

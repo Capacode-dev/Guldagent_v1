@@ -30,6 +30,7 @@ def koer_mvp_pipeline(
     output_dir="data",
     llm_client=None,
     llm_model="gpt-5.4-mini",
+    test_startdato="2019-01-01",
 ):
     output_dir = Path(output_dir)
     processed_dir = output_dir / "processed"
@@ -48,6 +49,7 @@ def koer_mvp_pipeline(
         gold_path,
         processed_dir / "backtest_results.csv",
         required_features=MVP_COLUMNS,
+        test_startdato=test_startdato,
     )
     dato, signal_resultat = analyser_seneste(signal_path)
 
