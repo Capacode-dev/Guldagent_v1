@@ -4,13 +4,17 @@ import os
 from dotenv import load_dotenv
 
 from guldagent_v2.fred_client import FredClient
-from guldagent_v2.freegold_client import FreeGoldClient
+from guldagent_v2.fred_gold_client import FredGoldClient
 from guldagent_v2.pipeline import koer_mvp_pipeline
 
 
 def main():
     parser = argparse.ArgumentParser(description="Kør hele Guldagent v2 MVP-pipelinen.")
-    parser.add_argument("--start", default="2025-01-01")
+    parser.add_argument(
+        "--start",
+        default="2010-01-01",
+        help="Startdato for makrodata og historisk backtest (standard: 2010-01-01)",
+    )
     parser.add_argument("--slut")
     parser.add_argument("--output", default="data")
     parser.add_argument("--no-llm", action="store_true", help="Kør uden OpenAI API-kald")
@@ -18,7 +22,7 @@ def main():
 
     load_dotenv()
     fred_client = FredClient(os.getenv("FRED_API_KEY"))
-    gold_client = FreeGoldClient()
+    gold_client = FredGoldClient(fred_client)
 
     llm_client = None
     openai_key = os.getenv("OPENAI_API_KEY")
@@ -48,4 +52,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

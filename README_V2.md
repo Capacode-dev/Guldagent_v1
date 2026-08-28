@@ -7,7 +7,7 @@ at kunne ændre score eller retning.
 ## Hvad MVP'en indeholder
 
 - fem automatiske makroserier fra FRED
-- daglig historisk guldpris fra FreeGoldAPI, når kilden er tilgængelig
+- daglig historisk London-guldpris fra FRED til backtest
 - normalisering til sammenlignelige signaler mellem `-1` og `1`
 - vægtet og forklarlig signalmodel
 - backtest efter 5, 20 og 60 guldobservationer
@@ -68,13 +68,13 @@ python -m unittest -v
 Sikker første kørsel uden LLM-omkostning:
 
 ```bash
-python -m guldagent_v2.run_mvp --start 2025-01-01 --no-llm
+python -m guldagent_v2.run_mvp --start 2010-01-01 --no-llm
 ```
 
 Med LLM-forklaring, når `OPENAI_API_KEY` er sat:
 
 ```bash
-python -m guldagent_v2.run_mvp --start 2025-01-01
+python -m guldagent_v2.run_mvp --start 2010-01-01
 ```
 
 ## Output
@@ -105,12 +105,15 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 
 - kun fem af de planlagte cirka 20 variable hentes automatisk
 - den 2-årige amerikanske rente er en proxy for Fed-forventninger
-- FreeGoldAPI skifter historisk frekvens og bruges derfor kun fra 2025
-- FreeGoldAPI kan være forsinket; rapporten viser datakildens alder
-- 2025+ guldserien er futuresdata, mens GoldAPI i v1 leverer spotpris
+- hovedpipelinen bruger FRED-serien `GOLDAMGBD228NLBM` som historisk
+  reference; den slutter i 2022 og er ikke en aktuel guldpris
+- FreeGoldAPI-klienten er bevaret som et separat eksperiment, men dens
+  daglige `yahoo_finance`-del dækker ikke en lang markedscyklus
+- historisk London-fix og GoldAPI-spotprisen i v1 er forskellige dataserier
 - vægte og grænser er hypoteser, indtil backtesten har tilstrækkelige observationer
 - daglige backtest-signaler overlapper og er derfor ikke uafhængige observationer
-- træfsikkerheden skal sammenlignes med rapportens simple altid-OP-baseline
+- træfsikkerheden sammenlignes med altid-OP-baseline på præcis de samme
+  datoer, hvor modellen afgiver OP eller NED
 - LLM'en forklarer kun modellen og må ikke skabe eller ændre tal
 
 Guldagent v2 er et analyse- og læringsprojekt, ikke personlig

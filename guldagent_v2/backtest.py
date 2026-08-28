@@ -13,6 +13,7 @@ class BacktestSummary:
     gennemsnitligt_afkast: dict[int, float]
     altid_op_baseline: dict[int, float]
     vurderbare_signaler: dict[int, int]
+    retningssignaler: dict[int, int]
     signalfordeling: dict[str, int]
 
 
@@ -73,6 +74,7 @@ def opsummer_backtest(rows, horisonter=(5, 20, 60)):
     gennemsnitligt_afkast = {}
     altid_op_baseline = {}
     vurderbare_signaler = {}
+    retningssignaler_antal = {}
 
     for horisont in horisonter:
         kolonne = f"return_{horisont}d"
@@ -88,11 +90,14 @@ def opsummer_backtest(rows, horisonter=(5, 20, 60)):
             round(sum(row[kolonne] for row in vurderbare) / len(vurderbare), 4)
             if vurderbare else 0.0
         )
+        # Baseline skal måles på præcis de datoer, hvor modellen afgav
+        # et retningssignal. Ellers sammenlignes to forskellige stikprøver.
         altid_op_baseline[horisont] = (
-            round(sum(row[kolonne] > 0 for row in vurderbare) / len(vurderbare) * 100, 2)
-            if vurderbare else 0.0
+            round(sum(row[kolonne] > 0 for row in retningssignaler) / len(retningssignaler) * 100, 2)
+            if retningssignaler else 0.0
         )
         vurderbare_signaler[horisont] = len(vurderbare)
+        retningssignaler_antal[horisont] = len(retningssignaler)
 
     signalfordeling = dict(Counter(row["direction"] for row in rows))
     return BacktestSummary(
@@ -101,6 +106,7 @@ def opsummer_backtest(rows, horisonter=(5, 20, 60)):
         gennemsnitligt_afkast,
         altid_op_baseline,
         vurderbare_signaler,
+        retningssignaler_antal,
         signalfordeling,
     )
 

@@ -66,23 +66,28 @@ def _til_markdown(rapport):
     if backtest:
         lines.extend(["", "## Backtest", "", f"Antal signaler: {backtest['antal_signaler']}", ""])
         for horisont, accuracy in backtest["traefsikkerhed"].items():
-            lines.append(f"- {horisont} observationer: {accuracy:.2f}% træfsikkerhed")
-        lines.extend(["", "Sammenligningsbaseline (altid OP):", ""])
+            antal = backtest["retningssignaler"][horisont]
+            lines.append(
+                f"- {horisont} observationer: {accuracy:.2f}% træfsikkerhed "
+                f"({antal} OP/NED-signaler)"
+            )
+        lines.extend(["", "Sammenligningsbaseline (altid OP på de samme datoer):", ""])
         for horisont, baseline in backtest["altid_op_baseline"].items():
             lines.append(f"- {horisont} observationer: {baseline:.2f}%")
         lines.extend(["", f"Signalfordeling: {backtest['signalfordeling']}"])
 
     gold = rapport.get("gulddata")
     if gold:
-        status = "forældet" if gold["foraeldet"] else "aktuel"
         lines.extend(
             [
                 "",
-                "## Datakvalitet",
+                "## Historiske backtestdata",
                 "",
                 f"- Guldkilde: {gold['kilde']}",
-                f"- Seneste guldobservation: {gold['seneste_dato']}",
-                f"- Status: {status} ({gold['alder_dage']} dage gammel)",
+                f"- Rolle: {gold['rolle']}",
+                f"- Periode: {gold['foerste_dato']} til {gold['seneste_dato']}",
+                f"- Observationer: {gold['antal_observationer']}",
+                "- Serien bruges ikke som aktuel guldpris.",
             ]
         )
 

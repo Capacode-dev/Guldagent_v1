@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 
 from guldagent_v2.analyze_latest import analyser_seneste
@@ -56,14 +55,15 @@ def koer_mvp_pipeline(
     if llm_client:
         llm_analyse = lav_llm_analyse(signal_resultat, dato, llm_client, llm_model)
 
-    seneste_gulddato = guldpriser[-1][0]
-    alder = (date.today() - date.fromisoformat(seneste_gulddato)).days
+    source_name = getattr(gold_client, "SOURCE_NAME", None)
+    if not isinstance(source_name, str):
+        source_name = guldpriser[-1][2]
     gold_status = {
-        "kilde": "FreeGoldAPI / yahoo_finance",
+        "kilde": source_name,
+        "rolle": "Historisk reference til backtest",
         "antal_observationer": len(guldpriser),
-        "seneste_dato": seneste_gulddato,
-        "alder_dage": alder,
-        "foraeldet": alder > 7,
+        "foerste_dato": guldpriser[0][0],
+        "seneste_dato": guldpriser[-1][0],
     }
     rapport = byg_rapport(dato, signal_resultat, backtest, llm_analyse, gold_status)
     json_path, md_path = gem_rapport(rapport, processed_dir)

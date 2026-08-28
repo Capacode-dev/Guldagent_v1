@@ -37,10 +37,13 @@ class PipelineTests(unittest.TestCase):
             backtest_path = Path(directory) / "processed" / "backtest_results.csv"
             with backtest_path.open(encoding="utf-8") as fil:
                 backtest_rows = list(csv.DictReader(fil))
+            rapport = rapport_path.read_text(encoding="utf-8")
 
             self.assertTrue(rapport_path.exists())
             self.assertTrue(backtest_path.exists())
             self.assertGreater(len(backtest_rows), 0)
+            self.assertIn("samme datoer", rapport)
+            self.assertIn("Historiske backtestdata", rapport)
 
         self.assertFalse(resultat.llm_brugt)
         self.assertIn(resultat.retning, {"OP", "NEUTRAL", "NED"})

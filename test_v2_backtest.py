@@ -37,7 +37,25 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(rows[0]["return_60d"], 60.0)
         self.assertEqual(summary.traefsikkerhed[20], 100.0)
         self.assertEqual(summary.altid_op_baseline[20], 100.0)
+        self.assertEqual(summary.retningssignaler[20], 1)
         self.assertEqual(summary.signalfordeling, {"OP": 1})
+
+    def test_baseline_bruger_samme_datoer_som_modellens_retningssignaler(self):
+        rows = [
+            {"direction": "NEUTRAL", "return_5d": 1.0},
+            {"direction": "NEUTRAL", "return_5d": 1.0},
+            {"direction": "OP", "return_5d": -1.0},
+            {"direction": "NED", "return_5d": -1.0},
+        ]
+
+        from guldagent_v2.backtest import opsummer_backtest
+
+        summary = opsummer_backtest(rows, horisonter=(5,))
+
+        self.assertEqual(summary.traefsikkerhed[5], 50.0)
+        self.assertEqual(summary.altid_op_baseline[5], 0.0)
+        self.assertEqual(summary.vurderbare_signaler[5], 4)
+        self.assertEqual(summary.retningssignaler[5], 2)
 
     def test_udelader_horisont_uden_nok_senere_priser(self):
         with tempfile.TemporaryDirectory() as directory:
