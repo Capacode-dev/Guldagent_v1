@@ -1,0 +1,1 @@
+signal_id,recorded_at_utc,analysis_date,evaluation_due_date,direction,score,signal_strength,primary_horizon_months,gold_price_start_usd_oz,gold_price_observed_at_utc,gold_source,model_version,git_commit,mvp_coverage,drivers_json

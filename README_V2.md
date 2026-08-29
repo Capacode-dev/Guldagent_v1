@@ -145,3 +145,48 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 
 Guldagent v2 er et analyse- og læringsprojekt, ikke personlig
 investeringsrådgivning.
+
+## Fremadrettet paper trading
+
+Paper trading-journalen registrerer ét signal pr. måned og modelversion
+uden at placere handler eller bruge rigtige penge. Signalet gemmes i
+`paper_trading/paper_signals.csv`, mens udfaldet senere tilføjes separat i
+`paper_trading/paper_outcomes.csv`. Ingen API-nøgler skrives i filerne.
+
+Regler:
+
+- et signal kan først registreres fra den 25. i måneden
+- analyserapporten må højst være 14 dage gammel
+- samme måned og modelversion kan kun registreres én gang
+- udfaldet kan først registreres på den fastlagte evalueringsdato
+- signal- og resultatfilerne er append-only gennem programmet
+- start og slut måles som GoldAPI XAU/USD i USD pr. troy ounce
+
+Sikker dry-run uden API-kald eller filændringer:
+
+```bash
+python -m guldagent_v2.paper_trading record --dry-run --test-price 3500
+```
+
+Registrer et rigtigt signal fra den seneste genererede rapport:
+
+```bash
+python -m guldagent_v2.paper_trading record
+```
+
+Vis journalstatus:
+
+```bash
+python -m guldagent_v2.paper_trading status
+```
+
+Efter evalueringsdatoen bruges det viste signal-id:
+
+```bash
+python -m guldagent_v2.paper_trading evaluate SIGNAL_ID
+```
+
+Efter en rigtig registrering eller evaluering skal de ændrede CSV-filer
+committes og pushes, så Git-historikken fungerer som revisionsspor. Paper
+trading bruger konkrete spotpriser og er derfor en anden test end den
+historiske backtests månedsgennemsnit.
