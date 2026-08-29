@@ -51,6 +51,7 @@ class PipelineTests(unittest.TestCase):
             self.assertIn("Primær prognosehorisont", rapport)
             self.assertIn("Wilson-intervaller", rapport)
             self.assertIn("eksakt McNemar", rapport)
+            self.assertIn("overlappende horisont", rapport)
 
         self.assertFalse(resultat.llm_brugt)
         self.assertIn(resultat.retning, {"OP", "NEUTRAL", "NED"})

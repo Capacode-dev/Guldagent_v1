@@ -9,6 +9,7 @@ from guldagent_v2.backtest import (
     _wilson_interval_95,
     koer_backtest,
     koer_maanedsbacktest,
+    opsummer_backtest,
 )
 
 
@@ -66,7 +67,7 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(summary.antal_pr_retning[5], {"OP": 1, "NED": 1})
         self.assertEqual(summary.parret_sammenligning[5]["model_sejre"], 1)
         self.assertEqual(summary.parret_sammenligning[5]["baseline_sejre"], 0)
-        self.assertFalse(summary.parret_sammenligning[5]["signifikant_5pct"])
+        self.assertIsNone(summary.parret_sammenligning[5]["signifikant_5pct"])
 
     def test_wilson_interval_viser_usikkerhed(self):
         self.assertEqual(_wilson_interval_95(27, 40), (52.02, 79.92))
@@ -75,6 +76,17 @@ class BacktestTests(unittest.TestCase):
     def test_eksakt_mcnemar_sammenligner_parrede_udfald(self):
         self.assertEqual(_eksakt_mcnemar_p(14, 7), 0.1892)
         self.assertEqual(_eksakt_mcnemar_p(0, 0), 1.0)
+
+    def test_overlappende_horisont_faar_ingen_formel_p_vaerdi(self):
+        summary = opsummer_backtest(
+            [{"direction": "NED", "return_3m": -1.0}],
+            horisonter=(3,),
+            suffix="m",
+            formelle_parrede_horisonter=(1,),
+        )
+
+        self.assertFalse(summary.parret_sammenligning[3]["formel_test"])
+        self.assertIsNone(summary.parret_sammenligning[3]["p_vaerdi"])
 
     def test_udelader_horisont_uden_nok_senere_priser(self):
         with tempfile.TemporaryDirectory() as directory:

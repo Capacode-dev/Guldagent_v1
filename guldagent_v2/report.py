@@ -190,14 +190,23 @@ def _format_interval(interval):
 def _tilfoej_parrede_linjer(lines, summary):
     for horisont, resultat in summary["parret_sammenligning"].items():
         enhed = _format_enhed(horisont, summary["horisont_enhed"])
-        status = (
-            "signifikant ved 5%-grænsen"
-            if resultat["signifikant_5pct"]
-            else "ikke signifikant ved 5%-grænsen"
-        )
-        lines.append(
+        start = (
             f"- {horisont} {enhed}: {resultat['forskel_procentpoint']:+.2f} "
             f"procentpoint; modelsejre {resultat['model_sejre']}, "
-            f"baselinesejre {resultat['baseline_sejre']}, "
-            f"eksakt McNemar p={resultat['p_vaerdi']:.4f} ({status})"
+            f"baselinesejre {resultat['baseline_sejre']}"
         )
+        if resultat["formel_test"]:
+            status = (
+                "signifikant ved 5%-grænsen"
+                if resultat["signifikant_5pct"]
+                else "ikke signifikant ved 5%-grænsen"
+            )
+            lines.append(
+                f"{start}; eksakt McNemar p={resultat['p_vaerdi']:.4f} "
+                f"({status})"
+            )
+        else:
+            lines.append(
+                f"{start} (diagnostisk; overlappende horisont, "
+                "ingen formel p-værdi)"
+            )

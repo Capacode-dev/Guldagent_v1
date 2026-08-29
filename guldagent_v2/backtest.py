@@ -17,7 +17,7 @@ class BacktestSummary:
     retningssignaler: dict[int, int]
     konfidensinterval_95: dict[int, tuple[float, float]]
     baseline_konfidensinterval_95: dict[int, tuple[float, float]]
-    parret_sammenligning: dict[int, dict[str, float | int | bool]]
+    parret_sammenligning: dict[int, dict[str, float | int | bool | None]]
     traefsikkerhed_pr_retning: dict[int, dict[str, float]]
     konfidensinterval_pr_retning: dict[int, dict[str, tuple[float, float]]]
     antal_pr_retning: dict[int, dict[str, int]]
@@ -143,6 +143,7 @@ def koer_maanedsbacktest(
         horisonter,
         suffix="m",
         horisont_enhed="måneder",
+        formelle_parrede_horisonter=(1,),
     )
     summary = replace(summary, primaer_horisont=1)
     if test_startdato:
@@ -181,6 +182,7 @@ def opsummer_backtest(
     horisonter=(5, 20, 60),
     suffix="d",
     horisont_enhed="guldobservationer",
+    formelle_parrede_horisonter=(),
 ):
     traefsikkerhed = {}
     gennemsnitligt_afkast = {}
@@ -236,7 +238,11 @@ def opsummer_backtest(
                 model_sejre += 1
             elif baseline_korrekt and not model_korrekt:
                 baseline_sejre += 1
-        p_vaerdi = _eksakt_mcnemar_p(model_sejre, baseline_sejre)
+        formel_test = horisont in formelle_parrede_horisonter
+        p_vaerdi = (
+            _eksakt_mcnemar_p(model_sejre, baseline_sejre)
+            if formel_test else None
+        )
         parret_sammenligning[horisont] = {
             "forskel_procentpoint": round(
                 traefsikkerhed[horisont] - altid_op_baseline[horisont],
@@ -246,7 +252,8 @@ def opsummer_backtest(
             "baseline_sejre": baseline_sejre,
             "uafgjorte": len(retningssignaler) - model_sejre - baseline_sejre,
             "p_vaerdi": p_vaerdi,
-            "signifikant_5pct": p_vaerdi < 0.05,
+            "formel_test": formel_test,
+            "signifikant_5pct": p_vaerdi < 0.05 if formel_test else None,
         }
         vurderbare_signaler[horisont] = len(vurderbare)
         retningssignaler_antal[horisont] = len(retningssignaler)
@@ -295,6 +302,7 @@ def _opsummer_delperiode(navn, rows, horisonter):
         horisonter,
         suffix="m",
         horisont_enhed="måneder",
+        formelle_parrede_horisonter=(1,),
     )
     data = asdict(summary)
     data.pop("delperioder")
