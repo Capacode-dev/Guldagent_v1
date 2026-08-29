@@ -46,6 +46,7 @@ def gem_rapport(rapport, output_dir="data/processed"):
 
 
 def _til_markdown(rapport):
+    backtest = rapport.get("backtest")
     lines = [
         "# Guldagent v2 – analyserapport",
         "",
@@ -55,27 +56,42 @@ def _til_markdown(rapport):
         f"**Signalstyrke:** {rapport['signalstyrke']}%",
         f"**MVP-dækning:** {rapport['mvp_signaler_brugt']}/{rapport['mvp_signaler_total']}",
         f"**Fuld modeldækning:** {rapport['datadaekning_fuld_model']}%",
-        "",
-        "## Vigtigste drivere",
-        "",
     ]
+    if backtest and backtest.get("primaer_horisont"):
+        lines.append(
+            f"**Primær prognosehorisont:** {backtest['primaer_horisont']} måned"
+        )
+    lines.extend(["", "## Vigtigste drivere", ""])
     for driver in rapport["drivere"]:
         lines.append(f"- {driver['navn']}: {driver['bidrag']:+.3f}")
 
-    backtest = rapport.get("backtest")
     if backtest:
         lines.extend(["", "## Backtest", "", f"Antal signaler: {backtest['antal_signaler']}", ""])
         for horisont, accuracy in backtest["traefsikkerhed"].items():
             antal = backtest["retningssignaler"][horisont]
             enhed = _format_enhed(horisont, backtest["horisont_enhed"])
+            interval = _format_interval(backtest["konfidensinterval_95"][horisont])
+            primaer = " (primær)" if horisont == backtest.get("primaer_horisont") else ""
             lines.append(
-                f"- {horisont} {enhed}: {accuracy:.2f}% træfsikkerhed "
-                f"({antal} OP/NED-signaler)"
+                f"- {horisont} {enhed}{primaer}: {accuracy:.2f}% træfsikkerhed, "
+                f"95% interval {interval} ({antal} OP/NED-signaler)"
             )
         lines.extend(["", "Sammenligningsbaseline (altid OP på de samme datoer):", ""])
         for horisont, baseline in backtest["altid_op_baseline"].items():
             enhed = _format_enhed(horisont, backtest["horisont_enhed"])
-            lines.append(f"- {horisont} {enhed}: {baseline:.2f}%")
+            interval = _format_interval(
+                backtest["baseline_konfidensinterval_95"][horisont]
+            )
+            lines.append(
+                f"- {horisont} {enhed}: {baseline:.2f}%, 95% interval {interval}"
+            )
+        lines.extend(
+            [
+                "",
+                "95%-intervallerne er Wilson-intervaller og viser statistisk usikkerhed; "
+                "de er ikke en garanti eller alene et bevis for en bedre model.",
+            ]
+        )
         lines.extend(["", f"Signalfordeling: {backtest['signalfordeling']}"])
         lines.extend(["", "Træfsikkerhed opdelt efter signal:", ""])
         _tilfoej_retningslinjer(lines, backtest)
@@ -95,9 +111,16 @@ def _til_markdown(rapport):
                 enhed = _format_enhed(horisont, periode["horisont_enhed"])
                 baseline = periode["altid_op_baseline"][horisont]
                 antal = periode["retningssignaler"][horisont]
+                model_interval = _format_interval(
+                    periode["konfidensinterval_95"][horisont]
+                )
+                baseline_interval = _format_interval(
+                    periode["baseline_konfidensinterval_95"][horisont]
+                )
                 lines.append(
-                    f"- {horisont} {enhed}: model {accuracy:.2f}%, "
-                    f"altid OP {baseline:.2f}% ({antal} OP/NED-signaler)"
+                    f"- {horisont} {enhed}: model {accuracy:.2f}% "
+                    f"[{model_interval}], altid OP {baseline:.2f}% "
+                    f"[{baseline_interval}] ({antal} OP/NED-signaler)"
                 )
             lines.extend(["", "Fordelt efter signal:", ""])
             _tilfoej_retningslinjer(lines, periode)
@@ -143,7 +166,18 @@ def _tilfoej_retningslinjer(lines, summary):
         enhed = _format_enhed(horisont, summary["horisont_enhed"])
         op_antal = summary["antal_pr_retning"][horisont]["OP"]
         ned_antal = summary["antal_pr_retning"][horisont]["NED"]
-        lines.append(
-            f"- {horisont} {enhed}: OP {accuracies['OP']:.2f}% ({op_antal}), "
-            f"NED {accuracies['NED']:.2f}% ({ned_antal})"
+        op_interval = _format_interval(
+            summary["konfidensinterval_pr_retning"][horisont]["OP"]
         )
+        ned_interval = _format_interval(
+            summary["konfidensinterval_pr_retning"][horisont]["NED"]
+        )
+        lines.append(
+            f"- {horisont} {enhed}: OP {accuracies['OP']:.2f}% "
+            f"[{op_interval}] ({op_antal}), NED {accuracies['NED']:.2f}% "
+            f"[{ned_interval}] ({ned_antal})"
+        )
+
+
+def _format_interval(interval):
+    return f"{interval[0]:.2f}–{interval[1]:.2f}%"

@@ -48,6 +48,8 @@ class PipelineTests(unittest.TestCase):
             self.assertIn("Referenceperiode", rapport)
             self.assertIn("Senere testperiode", rapport)
             self.assertIn("Fordelt efter signal", rapport)
+            self.assertIn("Primær prognosehorisont", rapport)
+            self.assertIn("Wilson-intervaller", rapport)
 
         self.assertFalse(resultat.llm_brugt)
         self.assertIn(resultat.retning, {"OP", "NEUTRAL", "NED"})

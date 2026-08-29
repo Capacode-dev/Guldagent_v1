@@ -11,9 +11,11 @@ at kunne ændre score eller retning.
 - normalisering til sammenlignelige signaler mellem `-1` og `1`
 - vægtet og forklarlig signalmodel
 - backtest efter 1, 3 og 12 måneder
+- 1 måned er MVP-modellens primære prognosehorisont; 3 og 12 måneder
+  bevares som diagnostiske sammenligninger
 - valgfri LLM-forklaring via OpenAI Responses API
 - JSON- og Markdown-rapport
-- dry-run uden LLM og 22 automatiske tests
+- dry-run uden LLM og en automatisk testsuite
 
 ## 1. Åbn projektet i VS Code
 
@@ -131,6 +133,9 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 - rapporten viser både samlet resultat, tidsopdelte perioder og OP/NED
   hver for sig; perioden fra 2019 er en senere tidsopdelt validering, ikke
   en garanti for et ægte fremtidigt resultat
+- træfsikkerheder vises med Wilson 95%-intervaller, så små stikprøvers
+  statistiske usikkerhed fremgår; intervallerne beviser ikke alene, at
+  modellen er bedre end baseline
 - LLM'en forklarer kun modellen og må ikke skabe eller ændre tal
 
 Guldagent v2 er et analyse- og læringsprojekt, ikke personlig

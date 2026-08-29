@@ -1,4 +1,5 @@
 import csv
+import math
 from collections import Counter
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
@@ -14,11 +15,15 @@ class BacktestSummary:
     altid_op_baseline: dict[int, float]
     vurderbare_signaler: dict[int, int]
     retningssignaler: dict[int, int]
+    konfidensinterval_95: dict[int, tuple[float, float]]
+    baseline_konfidensinterval_95: dict[int, tuple[float, float]]
     traefsikkerhed_pr_retning: dict[int, dict[str, float]]
+    konfidensinterval_pr_retning: dict[int, dict[str, tuple[float, float]]]
     antal_pr_retning: dict[int, dict[str, int]]
     signalfordeling: dict[str, int]
     horisont_enhed: str
     delperioder: dict[str, dict] = field(default_factory=dict)
+    primaer_horisont: int | None = None
 
 
 def koer_backtest(
@@ -138,6 +143,7 @@ def koer_maanedsbacktest(
         suffix="m",
         horisont_enhed="måneder",
     )
+    summary = replace(summary, primaer_horisont=1)
     if test_startdato:
         reference_rows = [
             row for row in output_rows
@@ -180,7 +186,10 @@ def opsummer_backtest(
     altid_op_baseline = {}
     vurderbare_signaler = {}
     retningssignaler_antal = {}
+    konfidensinterval_95 = {}
+    baseline_konfidensinterval_95 = {}
     traefsikkerhed_pr_retning = {}
+    konfidensinterval_pr_retning = {}
     antal_pr_retning = {}
 
     for horisont in horisonter:
@@ -203,9 +212,19 @@ def opsummer_backtest(
             round(sum(row[kolonne] > 0 for row in retningssignaler) / len(retningssignaler) * 100, 2)
             if retningssignaler else 0.0
         )
+        konfidensinterval_95[horisont] = _wilson_interval_95(
+            len(korrekte),
+            len(retningssignaler),
+        )
+        baseline_korrekte = sum(row[kolonne] > 0 for row in retningssignaler)
+        baseline_konfidensinterval_95[horisont] = _wilson_interval_95(
+            baseline_korrekte,
+            len(retningssignaler),
+        )
         vurderbare_signaler[horisont] = len(vurderbare)
         retningssignaler_antal[horisont] = len(retningssignaler)
         traefsikkerhed_pr_retning[horisont] = {}
+        konfidensinterval_pr_retning[horisont] = {}
         antal_pr_retning[horisont] = {}
         for retning in ("OP", "NED"):
             valgte = [row for row in retningssignaler if row["direction"] == retning]
@@ -218,6 +237,10 @@ def opsummer_backtest(
                 round(len(retning_korrekte) / len(valgte) * 100, 2)
                 if valgte else 0.0
             )
+            konfidensinterval_pr_retning[horisont][retning] = _wilson_interval_95(
+                len(retning_korrekte),
+                len(valgte),
+            )
             antal_pr_retning[horisont][retning] = len(valgte)
 
     signalfordeling = dict(Counter(row["direction"] for row in rows))
@@ -228,7 +251,10 @@ def opsummer_backtest(
         altid_op_baseline=altid_op_baseline,
         vurderbare_signaler=vurderbare_signaler,
         retningssignaler=retningssignaler_antal,
+        konfidensinterval_95=konfidensinterval_95,
+        baseline_konfidensinterval_95=baseline_konfidensinterval_95,
         traefsikkerhed_pr_retning=traefsikkerhed_pr_retning,
+        konfidensinterval_pr_retning=konfidensinterval_pr_retning,
         antal_pr_retning=antal_pr_retning,
         signalfordeling=signalfordeling,
         horisont_enhed=horisont_enhed,
@@ -250,6 +276,27 @@ def _opsummer_delperiode(navn, rows, horisonter):
         if rows else "ingen observationer"
     )
     return data
+
+
+def _wilson_interval_95(antal_korrekte, antal):
+    if antal == 0:
+        return (0.0, 0.0)
+    z = 1.96
+    andel = antal_korrekte / antal
+    naevner = 1 + z**2 / antal
+    centrum = (andel + z**2 / (2 * antal)) / naevner
+    margen = (
+        z
+        * math.sqrt(
+            andel * (1 - andel) / antal
+            + z**2 / (4 * antal**2)
+        )
+        / naevner
+    )
+    return (
+        round(max(0.0, centrum - margen) * 100, 2),
+        round(min(1.0, centrum + margen) * 100, 2),
+    )
 
 
 def _afgraens_fremtidige_targets(rows, horisonter, slut_foer):

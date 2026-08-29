@@ -4,7 +4,11 @@ import unittest
 from datetime import date, timedelta
 from pathlib import Path
 
-from guldagent_v2.backtest import koer_backtest, koer_maanedsbacktest
+from guldagent_v2.backtest import (
+    _wilson_interval_95,
+    koer_backtest,
+    koer_maanedsbacktest,
+)
 
 
 class BacktestTests(unittest.TestCase):
@@ -60,6 +64,10 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(summary.traefsikkerhed_pr_retning[5]["NED"], 100.0)
         self.assertEqual(summary.antal_pr_retning[5], {"OP": 1, "NED": 1})
 
+    def test_wilson_interval_viser_usikkerhed(self):
+        self.assertEqual(_wilson_interval_95(27, 40), (52.02, 79.92))
+        self.assertEqual(_wilson_interval_95(0, 0), (0.0, 0.0))
+
     def test_udelader_horisont_uden_nok_senere_priser(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
@@ -110,6 +118,7 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(rows[0]["direction"], "OP")
         self.assertEqual(rows[0]["return_1m"], 10.0)
         self.assertEqual(summary.horisont_enhed, "måneder")
+        self.assertEqual(summary.primaer_horisont, 1)
 
     def test_maanedsbacktest_deler_reference_og_senere_test(self):
         with tempfile.TemporaryDirectory() as directory:
