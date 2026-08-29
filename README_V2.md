@@ -136,6 +136,9 @@ CSV- og rapportfilerne genereres lokalt og ignoreres af Git.
 - træfsikkerheder vises med Wilson 95%-intervaller, så små stikprøvers
   statistiske usikkerhed fremgår; intervallerne beviser ikke alene, at
   modellen er bedre end baseline
+- modellen og altid-OP sammenlignes også direkte med en eksakt McNemar-test
+  på de måneder, hvor deres korrekt/forkert-resultater er forskellige;
+  `p < 0.05` markeres som den almindelige statistiske 5%-grænse
 - LLM'en forklarer kun modellen og må ikke skabe eller ændre tal
 
 Guldagent v2 er et analyse- og læringsprojekt, ikke personlig

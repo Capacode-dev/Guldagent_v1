@@ -17,6 +17,7 @@ class BacktestSummary:
     retningssignaler: dict[int, int]
     konfidensinterval_95: dict[int, tuple[float, float]]
     baseline_konfidensinterval_95: dict[int, tuple[float, float]]
+    parret_sammenligning: dict[int, dict[str, float | int | bool]]
     traefsikkerhed_pr_retning: dict[int, dict[str, float]]
     konfidensinterval_pr_retning: dict[int, dict[str, tuple[float, float]]]
     antal_pr_retning: dict[int, dict[str, int]]
@@ -188,6 +189,7 @@ def opsummer_backtest(
     retningssignaler_antal = {}
     konfidensinterval_95 = {}
     baseline_konfidensinterval_95 = {}
+    parret_sammenligning = {}
     traefsikkerhed_pr_retning = {}
     konfidensinterval_pr_retning = {}
     antal_pr_retning = {}
@@ -221,6 +223,31 @@ def opsummer_backtest(
             baseline_korrekte,
             len(retningssignaler),
         )
+        model_sejre = 0
+        baseline_sejre = 0
+        for row in retningssignaler:
+            model_korrekt = (
+                row["direction"] == "OP" and row[kolonne] > 0
+            ) or (
+                row["direction"] == "NED" and row[kolonne] < 0
+            )
+            baseline_korrekt = row[kolonne] > 0
+            if model_korrekt and not baseline_korrekt:
+                model_sejre += 1
+            elif baseline_korrekt and not model_korrekt:
+                baseline_sejre += 1
+        p_vaerdi = _eksakt_mcnemar_p(model_sejre, baseline_sejre)
+        parret_sammenligning[horisont] = {
+            "forskel_procentpoint": round(
+                traefsikkerhed[horisont] - altid_op_baseline[horisont],
+                2,
+            ),
+            "model_sejre": model_sejre,
+            "baseline_sejre": baseline_sejre,
+            "uafgjorte": len(retningssignaler) - model_sejre - baseline_sejre,
+            "p_vaerdi": p_vaerdi,
+            "signifikant_5pct": p_vaerdi < 0.05,
+        }
         vurderbare_signaler[horisont] = len(vurderbare)
         retningssignaler_antal[horisont] = len(retningssignaler)
         traefsikkerhed_pr_retning[horisont] = {}
@@ -253,6 +280,7 @@ def opsummer_backtest(
         retningssignaler=retningssignaler_antal,
         konfidensinterval_95=konfidensinterval_95,
         baseline_konfidensinterval_95=baseline_konfidensinterval_95,
+        parret_sammenligning=parret_sammenligning,
         traefsikkerhed_pr_retning=traefsikkerhed_pr_retning,
         konfidensinterval_pr_retning=konfidensinterval_pr_retning,
         antal_pr_retning=antal_pr_retning,
@@ -297,6 +325,15 @@ def _wilson_interval_95(antal_korrekte, antal):
         round(max(0.0, centrum - margen) * 100, 2),
         round(min(1.0, centrum + margen) * 100, 2),
     )
+
+
+def _eksakt_mcnemar_p(model_sejre, baseline_sejre):
+    uenige = model_sejre + baseline_sejre
+    if uenige == 0:
+        return 1.0
+    mindste = min(model_sejre, baseline_sejre)
+    hale = sum(math.comb(uenige, k) for k in range(mindste + 1)) / 2**uenige
+    return round(min(1.0, 2 * hale), 4)
 
 
 def _afgraens_fremtidige_targets(rows, horisonter, slut_foer):

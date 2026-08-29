@@ -92,6 +92,8 @@ def _til_markdown(rapport):
                 "de er ikke en garanti eller alene et bevis for en bedre model.",
             ]
         )
+        lines.extend(["", "Parret sammenligning med altid OP:", ""])
+        _tilfoej_parrede_linjer(lines, backtest)
         lines.extend(["", f"Signalfordeling: {backtest['signalfordeling']}"])
         lines.extend(["", "Træfsikkerhed opdelt efter signal:", ""])
         _tilfoej_retningslinjer(lines, backtest)
@@ -122,6 +124,8 @@ def _til_markdown(rapport):
                     f"[{model_interval}], altid OP {baseline:.2f}% "
                     f"[{baseline_interval}] ({antal} OP/NED-signaler)"
                 )
+            lines.extend(["", "Parret sammenligning:", ""])
+            _tilfoej_parrede_linjer(lines, periode)
             lines.extend(["", "Fordelt efter signal:", ""])
             _tilfoej_retningslinjer(lines, periode)
 
@@ -181,3 +185,19 @@ def _tilfoej_retningslinjer(lines, summary):
 
 def _format_interval(interval):
     return f"{interval[0]:.2f}–{interval[1]:.2f}%"
+
+
+def _tilfoej_parrede_linjer(lines, summary):
+    for horisont, resultat in summary["parret_sammenligning"].items():
+        enhed = _format_enhed(horisont, summary["horisont_enhed"])
+        status = (
+            "signifikant ved 5%-grænsen"
+            if resultat["signifikant_5pct"]
+            else "ikke signifikant ved 5%-grænsen"
+        )
+        lines.append(
+            f"- {horisont} {enhed}: {resultat['forskel_procentpoint']:+.2f} "
+            f"procentpoint; modelsejre {resultat['model_sejre']}, "
+            f"baselinesejre {resultat['baseline_sejre']}, "
+            f"eksakt McNemar p={resultat['p_vaerdi']:.4f} ({status})"
+        )

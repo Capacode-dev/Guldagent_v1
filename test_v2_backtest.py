@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from guldagent_v2.backtest import (
+    _eksakt_mcnemar_p,
     _wilson_interval_95,
     koer_backtest,
     koer_maanedsbacktest,
@@ -63,10 +64,17 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(summary.traefsikkerhed_pr_retning[5]["OP"], 0.0)
         self.assertEqual(summary.traefsikkerhed_pr_retning[5]["NED"], 100.0)
         self.assertEqual(summary.antal_pr_retning[5], {"OP": 1, "NED": 1})
+        self.assertEqual(summary.parret_sammenligning[5]["model_sejre"], 1)
+        self.assertEqual(summary.parret_sammenligning[5]["baseline_sejre"], 0)
+        self.assertFalse(summary.parret_sammenligning[5]["signifikant_5pct"])
 
     def test_wilson_interval_viser_usikkerhed(self):
         self.assertEqual(_wilson_interval_95(27, 40), (52.02, 79.92))
         self.assertEqual(_wilson_interval_95(0, 0), (0.0, 0.0))
+
+    def test_eksakt_mcnemar_sammenligner_parrede_udfald(self):
+        self.assertEqual(_eksakt_mcnemar_p(14, 7), 0.1892)
+        self.assertEqual(_eksakt_mcnemar_p(0, 0), 1.0)
 
     def test_udelader_horisont_uden_nok_senere_priser(self):
         with tempfile.TemporaryDirectory() as directory:
